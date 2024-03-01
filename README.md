@@ -163,7 +163,7 @@ import { validateRequest } from "@gfx687/express-zod-validator";
 
 // app is an express app
 app.get(
-  "/api/test",
+  "/api/test/:id",
   validateRequest({
     params: z.object({
       id: z.string(),
@@ -194,7 +194,7 @@ import { validateRequest } from "@gfx687/express-zod-validator";
 
 // app is an express app
 app.get(
-  "/api/test",
+  "/api/test/:id",
   withParsedRequest({
     params: z.object({
       id: z.string().transform((x) => Number(x)),
