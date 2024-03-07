@@ -12,12 +12,14 @@ Middleware for [express](https://www.npmjs.com/package/express) to validate and 
 - [Example](#example)
 - [validateXXX vs withParsedXXX](#validatexxx-vs-withparsedxxx)
 - [Error Format](#error-format)
+  - [Error Customization](#error-customization)
 - [API Reference](#api-reference)
   - [`validateRequest`](#validaterequest)
   - [`validateRequestParams / validateRequestQuery / validateRequestBody`](#validaterequestparams--validaterequestquery--validaterequestbody)
   - [`withParsedRequest`](#withparsedrequest)
   - [`withParsedRequestParams / withParsedRequestQuery / withParsedRequestBody`](#withparsedrequestparams--withparsedrequestquery--withparsedrequestbody)
   - [`sendError` and `sendErrors`](#senderror-and-senderrors)
+  - [Included Custom Zod Schemas](#included-custom-zod-schemas)
 - [TODO](#todo)
 
 ## Installation
@@ -60,17 +62,16 @@ app.post(
 // `express.Request.query` normally consists of string values, but sometimes
 // we want something different. So here we will use zod's `transform` function
 // together with `withParsedRequestQuery` to transform req.query
-export const zodStringToBoolTransformation = z
+export const zodStringToBoolSchema = z
   .string()
   .toLowerCase()
-  .transform((x) => x === "true" || x === "1")
-  .pipe(z.boolean());
+  .transform((x) => x === "true" || x === "1");
 
 app.get(
   "/api/test",
   withParsedRequestQuery(
     z.object({
-      alwaysFail: zodStringToBoolTransformation.optional(),
+      alwaysFail: zodStringToBoolSchema.optional(),
     })
   ),
   (req, res, _next) => {
@@ -154,6 +155,27 @@ Content-Type: application/problem+json; charset=utf-8
 }
 ```
 
+### Error Customization
+
+To customize error format do the following:
+
+```typescript
+import {
+    PackageConfiguration as ValidationMiddlewareConfig,
+    RequestInputType
+} from "@gfx687/express-zod-middleware";
+
+ValidationMiddlewareConfig.sendErrors = (
+  res: Response,
+  zodErrors: [RequestInputType, z.ZodError<any>][]
+) => {
+  res.status(400);
+  res.json({ msg: "Invalid request"});
+}
+```
+
+P.S. There is no need to change `sendError`, it uses `sendErrors` under the hood.
+
 ## API Reference
 
 ### `validateRequest`
@@ -234,8 +256,13 @@ function sendErrors(
 );
 ```
 
+### Included Custom Zod Schemas
+
+- `zodStringToBoolSchema`, transforms `string` to `boolean`. Useful for parsing request query and/or params with `withParsed`.
+
+- `zodStringToNumberSchema`, transforms `string` to `number`. Useful for parsing request query and/or params with `withParsed`.
+
 ## TODO
 
-- allow users to customize error
 - Idea for an alternative `withParsed` implementation - add new fields to the request `express.Request.{parsedParams,parsedQuery}` instead modifying.  
    Middleware wrapper instead of middleware chain for ease of typing `express.Request` without dealing with nullables and fields being accessible in non-validated endpoints?

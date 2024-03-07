@@ -1,6 +1,6 @@
 {
   "name": "@gfx687/express-zod-middleware",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Express middleware to validate user input with zod",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
